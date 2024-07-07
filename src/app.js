@@ -1,8 +1,9 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
-
+import { Server } from "socket.io"
 const app = express()
+
 
 
 app.use(cors({
@@ -31,5 +32,6 @@ import userRouter from './routes/user.routes.js'
 // routes declaration 
 
 app.use("/api/v1/users",userRouter)
+// /api/v1/users/register
 
 export {app}

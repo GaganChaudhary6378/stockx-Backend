@@ -3,13 +3,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const userSchema = new Schema({
-    username: {
-        type: String,
-        lowercase: true,
-        default:"Guest",
-        trim: true,
-        index: true,
-    },
     email: {
         type: String,
         required: true,
@@ -17,25 +10,21 @@ const userSchema = new Schema({
         lowercase: true,
         trim: true,
     },
-    fullname: {
-        type: String,
-        // required: true,
-        trim: true,
-        index: true,
-    },
-    avatar: {
-        type: String,
-        // required: true,
-    },
-    coverImage: {
-        type: String,
-    },
-    watchHistory: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Video"
-        }
-    ],
+    // fullname: {
+    //     type: String,
+    //     // required: true,
+    //     trim: true,
+    //     index: true,
+    // },
+    // coverImage: {
+    //     type: String,
+    // },
+    // watchHistory: [
+    //     {
+    //         type: Schema.Types.ObjectId,
+    //         ref: "Video"
+    //     }
+    // ],
     password: {
         type: String,
         required: [true, "Password is required"]
@@ -59,8 +48,6 @@ userSchema.methods.generateAccessToken =function () {
     return jwt.sign({
         _id: this._id,
         email: this.email,
-        fullname: this.fullname,
-        username: this.username,
     },
         process.env.ACCESS_TOKEN_SECRET,
         {
