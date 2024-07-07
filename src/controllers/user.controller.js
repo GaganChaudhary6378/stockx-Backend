@@ -276,36 +276,38 @@ const stockInfo = asyncHandler(async (req, res) => {
         throw new ApiResponse(401, "Question is required");
     }
 
-    const gptQuery = `⁠ Act as a stock market news reporter and give me the news related to the query in 100 words: ${question} ⁠`;
+    const gptQuery = `Act as a stock market news reporter and give me the news related to the query in 100 words: and whenever you are breaking the line or starting a new point then add /n and add space before /n ${question}`;
 
-    const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: gptQuery }],
-        stream: true,
-        max_tokens: 300,
-        temperature: 0.5,
-        top_p: 0.5,
-        stream_options: { "include_usage": true }
-    }, { responseType: 'stream' });
 
-    let flag = true;
+    const chatCompletion = await openai.chat.completions.create({
+        messages: [{ role: "user", content: gptQuery }],
+        model: "gpt-3.5-turbo",
+    });
 
-    for await (const chunk of response) {
-        if (!chunk.choices[0]) {
-            flag = false;
-            break;
-        }
-
-        // Introduce a constant delay of 3 seconds
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        io.emit('chat message', chunk.choices[0].delta);
+    if (!chatCompletion.choices || !chatCompletion.choices.length) {
+        throw new ApiResponse(500, "No valid response from OpenAI");
     }
 
-    if (!flag) {
-        return res.status(200).json(new ApiResponse(200, {}, "Response completed"));
+    const responseContent = chatCompletion.choices[0].message.content;
+    console.log(responseContent);
+
+    // Split the response content into words
+    const words = responseContent.split(' ' || '\n');
+    console.log(words)
+    // Emit each word with a delay
+    for (const word of words) {
+        io.emit('chat message', word);
+
     }
+    return res.status(200).json(new ApiResponse(200, {}, "Response completed"));
 });
+
+// Helper function to sleep for a given number of milliseconds
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 
 
 
