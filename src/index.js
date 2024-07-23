@@ -23,6 +23,7 @@ connectDB()
         })
         io = new Server(server, {
             // pingTimeout: 6000,
+            transports:['websocket', 'polling'],
             serveClient: false,
             cors: {
                 origin: process.env.CORS_ORIGIN

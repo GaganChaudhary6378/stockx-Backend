@@ -13,12 +13,11 @@ const openai = new OpenAI({
 });
 
 
-
 const generateTokens = async (userId) => {
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -81,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log("User created:", user._id);
 
     const userInfo = await UserInfo.create({
-        userId: user._id,
+        userId: newUser._id,
         username: email,
     });
 
@@ -90,7 +89,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // Handle the response to the client as needed
 
 
-    const createdUser = await User.findById(user._id).select(
+    const createdUser = await User.findById(newUser._id).select(
         "-password -refreshToken"
     )
 
@@ -276,7 +275,7 @@ const stockInfo = asyncHandler(async (req, res) => {
         throw new ApiResponse(401, "Question is required");
     }
 
-    const gptQuery = `Act as a stock market news reporter and give me the news related to the query in 100 words: and whenever you are breaking the line or starting a new point then add /n and add space before /n ${question}`;
+    const gptQuery = `Act as a stock market news reporter and give me the news related to the query in 100 words: ${question}`;
 
 
     const chatCompletion = await openai.chat.completions.create({
@@ -289,26 +288,19 @@ const stockInfo = asyncHandler(async (req, res) => {
     }
 
     const responseContent = chatCompletion.choices[0].message.content;
-    console.log(responseContent);
+    console.log(responseContent,"2 baar");
 
     // Split the response content into words
-    const words = responseContent.split(' ' || '\n');
-    console.log(words)
+    // const words = responseContent.split(' ' || '\n');
+    // console.log(words)
     // Emit each word with a delay
-    for (const word of words) {
-        io.emit('chat message', word);
+    // for (const word of words) {
+    //     setInterval(() => {
+    //         io.emit('chat message', word);
+    //     }, 1000)
+    // }
 
-    }
-    return res.status(200).json(new ApiResponse(200, {}, "Response completed"));
+    return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
 });
-
-// Helper function to sleep for a given number of milliseconds
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-
-
 
 export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo };
