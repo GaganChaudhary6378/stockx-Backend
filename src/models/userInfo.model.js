@@ -1,12 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-const preferenceSchema = mongoose.Schema({
-    stockName: {
-        type: String,
-        required: true,
-    },
-})
-
 const userInfoSchema = mongoose.Schema({
     userId: {
         type: Schema.Types.ObjectId,
@@ -43,7 +36,7 @@ const userInfoSchema = mongoose.Schema({
         default: false,
     },
     favorites: {
-        type: [preferenceSchema],
+        type: [String],
         default: [],
     },
 

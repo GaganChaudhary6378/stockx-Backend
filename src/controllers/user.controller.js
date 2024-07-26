@@ -77,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const newUser = new User({ email, password });
     await newUser.save();
 
-    console.log("User created:", user._id);
+    console.log("User created:", newUser._id);
 
     const userInfo = await UserInfo.create({
         userId: newUser._id,
@@ -179,58 +179,94 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
     const { email, newEmail, password, newPassword, address, zipcode, city, country, fullName, username, dob } = req.body;
-    if (email === newEmail) {
-        throw new ApiResponse(404, "New email cannot be same as previous.");
-    }
-    if (!email && !password) {
-        throw new ApiResponse(401, "Username and password required");
-    }
+    console.log(city)
+    console.log(req.params)
+    const { id } = req.params;
+    if (newEmail || newPassword || email || password) {
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        throw new ApiResponse(404, "User does not exist");
-    }
-
-    if (password != "") {
-        const isPasswordValid = await user.isPasswordCorrect(password)
-
-        if (!isPasswordValid) {
-            throw new ApiError(401, "Invalid credentials")
+        if (!email || !newEmail || !password || !newPassword) {
+            return res.status(400).json(new ApiResponse(400, {}, "To change email and password, all current and new credentials are required"));
         }
 
-        user.password = newPassword;
-    }
+        if (email === newEmail) {
+            throw new ApiResponse(404, "New email cannot be same as previous.");
+        }
 
-    if (newEmail != "") {
-        user.email = newEmail;
+        const user = await User.findOne({ email });
 
-    } else {
-        throw new ApiResponse(404, "New email is required.");
-    }
-    user.save({ validateBeforeSave: false })
-    const userId = user._id;
-    // const newUser = await UserInfo.findOne({userId});
+        if (!user) {
+            return res.status(404).json(new ApiResponse(404, {}, "User does not exist"));
+        }
+        console.log("idhar aaya")
 
-    await UserInfo.findOneAndUpdate(
-        { userId },
-        {
-            $set: {
-                address: address || "",
-                zipcode: zipcode || "",
-                city: city || "",
-                country: country || "",
-                fullName: fullName || "",
-                username: username || "",
-                dob: dob || "",
+        if (password != "") {
+            const isPasswordValid = await user.isPasswordCorrect(password)
+
+            if (!isPasswordValid) {
+                throw new ApiError(401, "Invalid credentials")
             }
-        },
-        { new: true },
-    );
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "Profile updated successfully"))
+            user.password = newPassword;
+        }
+
+        if (newEmail != "") {
+            user.email = newEmail;
+
+        } else {
+            throw new ApiResponse(404, "New email is required.");
+        }
+        user.save({ validateBeforeSave: false })
+        const userId = user._id;
+        // const newUser = await UserInfo.findOne({userId});
+
+        await UserInfo.findOneAndUpdate(
+            { userId },
+            {
+                $set: {
+                    ...(address && { address }),
+                    ...(zipcode && { zipcode }),
+                    ...(city && { city }),
+                    ...(country && { country }),
+                    ...(fullName && { fullName }),
+                    ...(username && { username }),
+                    ...(dob && { dob }),
+                },
+            },
+            { new: true },
+        );
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Profile updated successfully"))
+
+    } else if (!email && !newEmail && !password && !newPassword) {
+
+        const userInfo = await UserInfo.findOne({ userId: id });
+        if (!userInfo) {
+            throw new ApiResponse(404, "User does not exist");
+        }
+        console.log("2nd case")
+        await UserInfo.findOneAndUpdate(
+            { userId: id },
+            {
+                $set: {
+                    ...(address && { address }),
+                    ...(zipcode && { zipcode }),
+                    ...(city && { city }),
+                    ...(country && { country }),
+                    ...(fullName && { fullName }),
+                    ...(username && { username }),
+                    ...(dob && { dob }),
+                },
+            },
+            { new: true },
+        );
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Profile updated successfully"))
+
+    }
+
+
 
 })
 
@@ -288,7 +324,7 @@ const stockInfo = asyncHandler(async (req, res) => {
     }
 
     const responseContent = chatCompletion.choices[0].message.content;
-    console.log(responseContent,"2 baar");
+    console.log(responseContent, "2 baar");
 
     // Split the response content into words
     // const words = responseContent.split(' ' || '\n');
