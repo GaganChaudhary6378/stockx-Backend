@@ -93,7 +93,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
     if (String(user.otp) !== String(otp)) {
         throw new ApiError(400, "Invalid OTP");
     }
-    
+
 
     // Mark the user as verified
     user.isVerified = true;
@@ -147,8 +147,8 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(404, "User does not exist")
     }
-    if (user.isVerified === false){
-        throw new ApiError(400 , "User is not Verified");
+    if (user.isVerified === false) {
+        throw new ApiError(400, "User is not Verified");
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password)
@@ -330,6 +330,27 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, userProfile));
 });
+const getParticularStockInfo = asyncHandler(async (req, res) => {
+    const { query } = req.body;
+    if (!query) {
+        throw new ApiResponse(401, "Query is required");
+    }
+
+    const gptQuery = `Act as a stock price predictor , like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that.So in the query you will reveive the last 7 days data so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words ${query}`;
+
+    const chatCompletion = await openai.chat.completions.create({
+        messages: [{ role: "user", content: gptQuery }],
+        model: "gpt-3.5-turbo",
+    });
+
+    if (!chatCompletion.choices || !chatCompletion.choices.length) {
+        throw new ApiResponse(500, "No valid response from OpenAI");
+    }
+
+    const responseContent = chatCompletion.choices[0].message.content;
+    // console.log(responseContent, "2 baar");
+    return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
+})
 
 const stockInfo = asyncHandler(async (req, res) => {
     const { question } = req.body;
@@ -365,4 +386,4 @@ const stockInfo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
 });
 
-export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo, verifyOtp };
+export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo, verifyOtp, getParticularStockInfo };
