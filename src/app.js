@@ -7,7 +7,7 @@ const app = express()
 
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: '*',
     credentials: true
 }))
 
@@ -34,5 +34,4 @@ import subscribeRouter from './routes/subscribe.routes.js'
 app.use("/api/v1/users", userRouter)
 // /api/v1/users/register
 app.use("/api/v1/newsletter", subscribeRouter)
-
 export { app }
