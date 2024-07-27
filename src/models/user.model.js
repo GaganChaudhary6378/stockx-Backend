@@ -29,6 +29,15 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Password is required"]
     },
+    otp: {
+        type: Number,
+        required: true,
+    },
+    isVerified: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
     refreshToken: {
         type: String,
     },
@@ -44,7 +53,7 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.isPasswordCorrect = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 }
-userSchema.methods.generateAccessToken =function () {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign({
         _id: this._id,
         email: this.email,

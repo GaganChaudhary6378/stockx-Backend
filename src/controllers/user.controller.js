@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { UserInfo } from "../models/userInfo.model.js";
 import OpenAI from "openai";
 import { io } from "../index.js";
+import nodemailer from "nodemailer";
 
 const openai = new OpenAI({
     apiKey: process.env.OPEN_API_KEY,  // Replace with your OpenAI API key
@@ -30,57 +31,77 @@ const generateTokens = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    // get user details from frontend
-    // validation
-    // check if user already exist : username , email
-    // check for images , check for avatar
-    // upload to cloudinary, avatar
-    // create user object - create entry in db
-    // remove password and refresh token form response
-    // check for user creation
-    // return res 
-
     const { email, password } = req.body;
     if ([email, password].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All fields are required")
+        throw new ApiError(400, "All fields are required");
     }
-    const existedUser = await User.findOne({
-        // $or: [{ username }, { email }]
-        email
-    })
 
-
+    const existedUser = await User.findOne({ email });
 
     if (existedUser) {
-        throw new ApiError(409, "User already exist")
+        throw new ApiError(409, "User already exists");
     }
 
+    // Generate a random 6-digit OTP
+    const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // const avatarLocalPath = req.files?.avatar[0]?.path;
-    //    const coverImageLocalPath = req.files?.coverImage[0]?.path;
-    // let coverImageLocalPath;
-    // if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-    //     coverImageLocalPath = req.files.coverImage[0].path;
-    // }
-
-    // if (!avatarLocalPath) {
-    //     throw new ApiError(400, "Avatar file is required")
-    // }
-
-    // const avatar = await uploadOnCloudinary(avatarLocalPath);
-    // const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-
-    // if (!avatar) {
-    //     throw new ApiError(400, "Avatar file is required")
-    // }
-
-    const newUser = new User({ email, password });
+    // Create a new user with the OTP
+    const newUser = new User({ email, password, otp: randomOtp });
     await newUser.save();
 
-    console.log("User created:", newUser._id);
+    // Send OTP using nodemailer
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.Username,
+            pass: process.env.Password
+        },
+    });
+
+    const mailData = {
+        from: process.env.Username,
+        to: email,
+        subject: "StockX (Verify your identity)",
+        text: `Hello, Your 6 digit OTP to continue on StockX is: ${randomOtp}`,
+    };
+
+    transporter.sendMail(mailData, async function (error, info) {
+        if (error) {
+            console.log(error);
+        }
+
+        res.status(200).json(
+            new ApiResponse(200, {}, "Check you mail account.")
+        );
+    });
+});
+
+const verifyOtp = asyncHandler(async (req, res) => {
+    const { email, otp } = req.body;
+    console.log(otp);
+    if ([email, otp].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    console.log(user.otp, "userOTP")
+
+    if (String(user.otp) !== String(otp)) {
+        throw new ApiError(400, "Invalid OTP");
+    }
+    
+
+    // Mark the user as verified
+    user.isVerified = true;
+    user.otp = null; // Clear the OTP after successful verification
+    await user.save({ validateBeforeSave: false });
 
     const userInfo = await UserInfo.create({
-        userId: newUser._id,
+        userId: user._id,
         username: email,
     });
 
@@ -89,7 +110,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // Handle the response to the client as needed
 
 
-    const createdUser = await User.findById(newUser._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
 
@@ -100,8 +121,9 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User registered successfully")
     )
+});
 
-})
+
 
 const loginUser = asyncHandler(async (req, res) => {
     // username , password, 
@@ -125,6 +147,10 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(404, "User does not exist")
     }
+    if (user.isVerified === false){
+        throw new ApiError(400 , "User is not Verified");
+    }
+
     const isPasswordValid = await user.isPasswordCorrect(password)
 
     if (!isPasswordValid) {
@@ -339,4 +365,4 @@ const stockInfo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
 });
 
-export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo };
+export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo, verifyOtp };
