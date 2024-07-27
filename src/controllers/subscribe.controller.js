@@ -6,10 +6,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Subscribe } from "../models/subscribe.model.js";
 import dotenv from "dotenv"
 
-dotenv.config({
-    path: '.././.env'
-})
-
+// dotenv.config({
+//     path: '.././.env'
+// })
+ 
 const subscribe = asyncHandler(async (req, res) => {
     const { email } = req.body;
     if (!email) {
