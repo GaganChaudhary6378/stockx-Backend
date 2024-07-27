@@ -331,12 +331,12 @@ const getUserProfile = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, userProfile));
 });
 const getParticularStockInfo = asyncHandler(async (req, res) => {
-    const { query } = req.body;
-    if (!query) {
+    const { question} = req.body;
+    if (!question) {
         throw new ApiResponse(401, "Query is required");
     }
 
-    const gptQuery = `Act as a stock price predictor , like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that.So in the query you will reveive the last 7 days data so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words ${query}`;
+    const gptQuery = `Act as a stock price predictor , like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that.So in the query you will reveive the last 7 days data so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words ${question}`;
 
     const chatCompletion = await openai.chat.completions.create({
         messages: [{ role: "user", content: gptQuery }],
