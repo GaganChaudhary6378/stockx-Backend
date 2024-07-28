@@ -6,8 +6,8 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-    origin: ["http://localhost:3000", "https://assignment-lavitation-frontend.vercel.app"],
-    credentials: true
+  origin: ["http://localhost:3000", "https://assignment-lavitation-frontend.vercel.app"],
+  credentials: true
 }));
 
 // Basic settings to handle data
