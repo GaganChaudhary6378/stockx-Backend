@@ -355,7 +355,9 @@ const getParticularStockInfo = asyncHandler(async (req, res) => {
     }
 
     if (user.responses >= 3) {
-        throw new ApiError(400, "You have reached the daily limit of free responses.");
+        return res.status(400).json({
+            error: "You have reached the daily limit of free responses.",
+        });
     }
 
     const gptQuery = `Act as a stock price predictor, like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that. So in the query you will receive the last 7 days data, so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words. ${question}`;
@@ -405,8 +407,10 @@ const stockInfo = asyncHandler(async (req, res) => {
     }
 
 
-    if (user.responses >=3) {
-        throw new ApiError(400, "You have reached the daily limit of free responses.")
+    if (user.responses >= 3) {
+        return res.status(400).json({
+            error: "You have reached the daily limit of free responses.",
+        });
     }
 
     const gptQuery = `Act as a stock market news reporter and give me the news related to the query in 100 words: ${question}`;
