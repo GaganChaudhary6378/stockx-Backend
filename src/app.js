@@ -7,8 +7,8 @@ const app = express()
 
 
 app.use(cors({
-    origin: '*',
-    // credentials: true
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
 }))
 
 // these are the 4 basic setting that we need to get the data
