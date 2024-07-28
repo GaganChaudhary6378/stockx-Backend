@@ -26,7 +26,7 @@ router.route("/profile/:id").post(updateUser)
 
 router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/getProfile").get(getUserProfile)
-router.route("/getStockInfo").post(stockInfo)
+router.route("/getStockInfo/:id").post(stockInfo)
 router.route("/getParticularStock/:id").post(getParticularStockInfo)
 router.route("/:id").post(preference);
 router.route("/getAllPreferences/:id").get(getAllPreferences);
