@@ -331,12 +331,34 @@ const getUserProfile = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, userProfile));
 });
 const getParticularStockInfo = asyncHandler(async (req, res) => {
-    const { question} = req.body;
-    if (!question) {
-        throw new ApiResponse(401, "Query is required");
+    const { question } = req.body;
+    const { id } = req.params;
+    if (!question || !id) {
+        throw new ApiError(401, "Query is required");
+    }
+    const user = await UserInfo.findOne({ userId: id });
+    if (!user) {
+        throw new ApiError(404, "User does not exist");
     }
 
-    const gptQuery = `Act as a stock price predictor , like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that.So in the query you will reveive the last 7 days data so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words ${question}`;
+    const now = new Date();
+    const lastResponseTime = user.lastResponseTime || new Date(0);
+
+    // Check if the last response was on a different day
+    const isSameDay =
+        now.getDate() === lastResponseTime.getDate() &&
+        now.getMonth() === lastResponseTime.getMonth() &&
+        now.getFullYear() === lastResponseTime.getFullYear();
+
+    if (!isSameDay) {
+        user.responses = 0;
+    }
+
+    if (user.responses >= 3) {
+        throw new ApiError(400, "You have reached the daily limit of free responses.");
+    }
+
+    const gptQuery = `Act as a stock price predictor, like user will ask you about the stock that at which point he have to buy or sell the stock or any query related to that. So in the query you will receive the last 7 days data, so on the basis of that predict the best possible case of buying and sell or hold, give response in 150 words. ${question}`;
 
     const chatCompletion = await openai.chat.completions.create({
         messages: [{ role: "user", content: gptQuery }],
@@ -348,14 +370,43 @@ const getParticularStockInfo = asyncHandler(async (req, res) => {
     }
 
     const responseContent = chatCompletion.choices[0].message.content;
-    // console.log(responseContent, "2 baar");
+
+    if (responseContent) {
+        user.responses += 1;
+        user.lastResponseTime = now;
+        await user.save({ validateBeforeSave: false });
+    }
+
     return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
-})
+});
+
 
 const stockInfo = asyncHandler(async (req, res) => {
     const { question } = req.body;
-    if (!question) {
+    const { id } = req.params;
+    if (!question || !id) {
         throw new ApiResponse(401, "Question is required");
+    }
+
+    const user = await UserInfo.findOne({ userId: id });
+    if (!user) {
+        throw new ApiError(404, "User does not exist");
+    }
+    const now = new Date();
+    const lastResponseTime = user.lastResponseTime || new Date(0);
+
+    const isSameDay =
+        now.getDate() === lastResponseTime.getDate() &&
+        now.getMonth() === lastResponseTime.getMonth() &&
+        now.getFullYear() === lastResponseTime.getFullYear();
+
+    if (!isSameDay) {
+        user.responses = 0;
+    }
+
+
+    if (user.responses >=3) {
+        throw new ApiError(400, "You have reached the daily limit of free responses.")
     }
 
     const gptQuery = `Act as a stock market news reporter and give me the news related to the query in 100 words: ${question}`;
@@ -371,7 +422,11 @@ const stockInfo = asyncHandler(async (req, res) => {
     }
 
     const responseContent = chatCompletion.choices[0].message.content;
-    console.log(responseContent, "2 baar");
+    if (responseContent) {
+        user.responses += 1;
+        user.lastResponseTime = now;
+        await user.save({ validateBeforeSave: false });
+    }
 
     // Split the response content into words
     // const words = responseContent.split(' ' || '\n');

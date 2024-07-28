@@ -15,6 +15,14 @@ const userInfoSchema = mongoose.Schema({
         type: String,
         // required: true,
     },
+    responses: {
+        type: Number,
+        default: 0,
+    },
+    lastResponseTime: {
+        type: Date,
+        default: null // or default: new Date(0)
+    },
     city: {
         type: String,
     },
@@ -26,7 +34,7 @@ const userInfoSchema = mongoose.Schema({
     },
     username: {
         type: String,
-        unique: true, 
+        unique: true,
     },
     dob: {
         type: String,
