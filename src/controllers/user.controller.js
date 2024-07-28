@@ -6,7 +6,6 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { UserInfo } from "../models/userInfo.model.js";
 import OpenAI from "openai";
-import { io } from "../index.js";
 import nodemailer from "nodemailer";
 
 const openai = new OpenAI({
