@@ -6,17 +6,10 @@ const app = express()
 
 
 
-const corsOptions = {
-    origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-    allowedHeaders: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-};
-
-app.use(cors(corsOptions));
-
-// Handle OPTIONS requests
-app.options('*', cors(corsOptions));
+app.use(cors({
+    // origin: '*',
+    // credentials: true
+}))
 
 // these are the 4 basic setting that we need to get the data
 app.use(express.json({
