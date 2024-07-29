@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getUserProfile, loginUser, logoutUser, registerUser, updateUser, stockInfo ,verifyOtp, getParticularStockInfo} from "../controllers/user.controller.js";
+import { getUserProfile, loginUser, logoutUser, registerUser, updateUser, stockInfo, verifyOtp, getParticularStockInfo, getCurrentUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { preference,getAllPreferences } from "../controllers/preferences.controller.js";
+import { preference, getAllPreferences } from "../controllers/preferences.controller.js";
 const router = Router()
 
 router.route("/register").post(
@@ -20,7 +20,7 @@ router.route("/register").post(
 )
 router.route("/verify").post(verifyOtp)
 router.route("/login").post(loginUser)
-
+router.route("/getUser").post(verifyJWT , getCurrentUser) // to get user profile throught access token
 // secured routes
 router.route("/profile/:id").post(updateUser)
 

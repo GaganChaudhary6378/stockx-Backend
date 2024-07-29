@@ -182,6 +182,18 @@ const loginUser = asyncHandler(async (req, res) => {
             }, "User logged in successfully"))
 })
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+    
+    const user = req.body;
+    const info = await UserInfo.findOne({ userId:user._id });
+    if (!info) {
+        throw new ApiError(404, "User not found");
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(200, info, "User Info fetched successfully"));
+
+})
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, {
         $set: {
@@ -444,4 +456,4 @@ const stockInfo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, responseContent, "Response completed"));
 });
 
-export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo, verifyOtp, getParticularStockInfo };
+export { registerUser, loginUser, logoutUser, updateUser, getUserProfile, stockInfo, verifyOtp, getParticularStockInfo ,getCurrentUser};
